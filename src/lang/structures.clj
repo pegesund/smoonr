@@ -1,4 +1,4 @@
-(ns lang.structure
+(ns lang.structures
   ; (:require [cern.colt.list :as colt])
 )
 
@@ -139,7 +139,11 @@
 
 (defn string-to-words [str]
   "Splits a string into tokens, does not keep empty strings"
-  (filter #(not= "" %)  (clojure.string/split str split-string)))
+  (let [s_lc (clojure.string/lower-case str)]
+    (filter #(not= "" %)  (clojure.string/split s_lc split-string))))
+
+(defn string-to-ids [str]
+  (map #(get @words %) (string-to-words str)))
 
 (defn string-to-map [str]
   (count-words (string-to-words str)))
@@ -206,7 +210,7 @@
 (defn phrase-index [str]
   "Creates a fingerprint of a doc to be used in phrase-search
 "
-  (let [word_list (string-to-words str)
+  (let [word_list (string-to-words (clojure.string/lower-case str))
         word_list_id (map #(get @words %) word_list)
         sorted_wordid (sort (distinct word_list_id))
         phrase_index (create-phrase-index)
@@ -247,29 +251,22 @@
           (if (= mother-ndx mother-num)
             false
             (let [res
-            (let [mother-txt-pos (.get pos_a (+ mother-start mother-ndx))]
-              (loop [lookfor (rest str-ids)
-                     lookfor-txt-pos (inc mother-txt-pos)
-                     ]
-                (if (empty? lookfor)
-                  true
-                  (let [lookfor-child (first lookfor)
-                        child-pos (.binarySearchFromTo word_a lookfor-child 0 word_a_size)]
-                    (if (< child-pos 0)
-                      false
-                      (let [child-num (.get num_a child-pos)
-                            child-start (.get start_a child-pos)
-                            child-pos-found (.binarySearchFromTo pos_a lookfor-txt-pos child-start (+ child-start child-num)) ]
-                        (if (< child-pos-found 0)
-                          false
-                          (recur (rest lookfor) (inc lookfor-txt-pos))
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )]
+                  (let [mother-txt-pos (.get pos_a (+ mother-start mother-ndx))]
+                    (loop [lookfor (rest str-ids)
+                           lookfor-txt-pos (inc mother-txt-pos)
+                           ]
+                      (if (empty? lookfor)
+                        true
+                        (let [lookfor-child (first lookfor)
+                              child-pos (.binarySearchFromTo word_a lookfor-child 0 word_a_size)]
+                          (if (< child-pos 0)
+                            false
+                            (let [child-num (.get num_a child-pos)
+                                  child-start (.get start_a child-pos)
+                                  child-pos-found (.binarySearchFromTo pos_a lookfor-txt-pos child-start (+ child-start child-num)) ]
+                              (if (< child-pos-found 0)
+                                false
+                                (recur (rest lookfor) (inc lookfor-txt-pos)))))))))]
               (if res res (recur (inc mother-ndx)))
               )
             )
@@ -279,4 +276,6 @@
     )        
   )         
             
-  
+(defn find-phrase-str [field str]
+  (let [word_ids (string-to-ids str)]
+    (find-phrase field word_ids)))
