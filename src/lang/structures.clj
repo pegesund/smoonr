@@ -143,7 +143,9 @@
     (filter #(not= "" %)  (clojure.string/split s_lc split-string))))
 
 (defn string-to-ids [str]
-  (map #(get @words %) (string-to-words str)))
+  "Maps a string to word-ids. Not known id's are substituted with -1 - an impossible number"
+  (map #(let [w (get @words %)] (if w w -1))
+       (string-to-words str)))
 
 (defn string-to-map [str]
   (count-words (string-to-words str)))
@@ -277,5 +279,6 @@
   )         
             
 (defn find-phrase-str [field str]
+"Find str in a field"
   (let [word_ids (string-to-ids str)]
     (find-phrase field word_ids)))
