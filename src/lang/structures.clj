@@ -2,15 +2,17 @@
   ; (:require [cern.colt.list :as colt])
 )
 
+
 (defn create-doc-ndx []
   "Creates a treeMap which contains all documents in a collection. Doc-id which is the key is a string"
   (new java.util.TreeMap)
 )
 
+(def split-string #"[,.; ]")
 
 (def doc-id-creator (atom 0))
 (def word-id-creator (atom 0))
-(def words (atom {}))
+(defonce words (atom {}))
 
 (defn add-new-word [word new-word-id]
   "Adds a new word to word hash"
@@ -137,7 +139,7 @@
 
 (defn string-to-words [str]
   "Splits a string into tokens, does not keep empty strings"
-  (filter #(not= "" %)  (clojure.string/split str #"[,.; ]")))
+  (filter #(not= "" %)  (clojure.string/split str split-string)))
 
 (defn string-to-map [str]
   (count-words (string-to-words str)))
@@ -178,7 +180,103 @@
       (.add colt_words wordid)
       (.add colt_num num)
       )
-    (create-doc colt_words colt_num nil)
-    )
+    
+ (create-doc colt_words colt_num nil)
+ )
+)
+ 
+(defrecord PhraseIndex 
+    [word num start pos]
 )
 
+(defn create-phrase-index []
+  "word - an colt array of word id
+   num  - an colt array of number of ocurs of this word
+   start - start position of num words
+   pos - positions, referenced by start and nums
+   "
+  (PhraseIndex.
+        (new cern.colt.list.tint.IntArrayList)
+        (new cern.colt.list.tint.IntArrayList)
+        (new cern.colt.list.tint.IntArrayList)
+        (new cern.colt.list.tint.IntArrayList)
+        )
+  )
+
+(defn phrase-index [str]
+  "Creates a fingerprint of a doc to be used in phrase-search
+"
+  (let [word_list (string-to-words str)
+        word_list_id (map #(get @words %) word_list)
+        sorted_wordid (sort (distinct word_list_id))
+        phrase_index (create-phrase-index)
+        word_a (:word phrase_index)
+        num_a (:num phrase_index)
+        pos_a (:pos phrase_index)
+        start_a (:start phrase_index)
+        ]
+    (doseq [id sorted_wordid]
+      (let [positions (keep-indexed #(if (= %2 id) %1) word_list_id)]
+        (println "id: " id " positions: " positions)
+        (.add word_a id)
+        (.add num_a (count positions))
+        (.add start_a (.size pos_a))
+        (doseq [pos positions] (.add pos_a pos))
+        )
+      )
+    phrase_index
+    )
+  )
+    
+(defn find-phrase [index str-ids]
+  "Find phrase in the index. Lookfor is a seq of word-idx"
+  (let  [word_a (:word index)
+         num_a (:num index)
+         pos_a (:pos index)
+         start_a (:start index)
+         word_a_size (.size word_a)
+         mother-id (first str-ids)
+         mother-pos (.binarySearchFromTo word_a mother-id 0 word_a_size)
+         ]
+    (if (< mother-pos 0)
+      false
+      (let [mother-num (.get num_a mother-pos)
+            mother-start (.get start_a mother-pos)
+            ]
+        (loop [mother-ndx 0]
+          (if (= mother-ndx mother-num)
+            false
+            (let [res
+            (let [mother-txt-pos (.get pos_a (+ mother-start mother-ndx))]
+              (loop [lookfor (rest str-ids)
+                     lookfor-txt-pos (inc mother-txt-pos)
+                     ]
+                (if (empty? lookfor)
+                  true
+                  (let [lookfor-child (first lookfor)
+                        child-pos (.binarySearchFromTo word_a lookfor-child 0 word_a_size)]
+                    (if (< child-pos 0)
+                      false
+                      (let [child-num (.get num_a child-pos)
+                            child-start (.get start_a child-pos)
+                            child-pos-found (.binarySearchFromTo pos_a lookfor-txt-pos child-start (+ child-start child-num)) ]
+                        (if (< child-pos-found 0)
+                          false
+                          (recur (rest lookfor) (inc lookfor-txt-pos))
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )]
+              (if res res (recur (inc mother-ndx)))
+              )
+            )
+          ) ; end mother loop
+        )
+      )
+    )        
+  )         
+            
+  
