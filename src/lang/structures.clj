@@ -282,3 +282,7 @@
 "Find str in a field"
   (let [word_ids (string-to-ids str)]
     (find-phrase field word_ids)))
+
+  
+                     
+                     
