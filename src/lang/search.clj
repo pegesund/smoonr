@@ -2,31 +2,6 @@
   ; (:use clojure.structures)
   (:require [lang.structures :as s])
   )
-
-(defn phrase-index [str]
-  "Creates a fingerprint of a doc to be used in phrase-search
-"
-  (let [word_list (s/string-to-words (clojure.string/lower-case str))
-        word_list_id (map #(get @s/words %) word_list)
-        sorted_wordid (sort (distinct word_list_id))
-        phrase_index (s/create-phrase-index)
-        word_a (:word phrase_index)
-        num_a (:num phrase_index)
-        pos_a (:pos phrase_index)
-        start_a (:start phrase_index)
-        ]
-    (doseq [id sorted_wordid]
-      (let [positions (keep-indexed #(if (= %2 id) %1) word_list_id)]
-        (println "id: " id " positions: " positions)
-        (.add word_a id)
-        (.add num_a (count positions))
-        (.add start_a (.size pos_a))
-        (doseq [pos positions] (.add pos_a pos))
-        )
-      )
-    phrase_index
-    )
-  )
     
 (defn find-phrase [index str-ids]
   "Find phrase in the index. Lookfor is a seq of word-idx"
@@ -76,3 +51,8 @@
 "Find str in a field"
   (let [word_ids (s/string-to-ids str)]
     (find-phrase field word_ids)))
+
+;(defin find-all-docs-with-word [field str]
+;  "Finds all docs where whe word appear. The string is unparsed"
+;  (let [s (clojure.string/lower-case str)]
+    

@@ -8,6 +8,7 @@
 (deftest meaning-of-life (is 42 42))
 
 (deftest test-phrase-search
+  "test if a phrase if found in compressed string"
   (let [wc (s/create-word-counters)
         f (s/create-field wc)
         s "Dette er Petter som skriver. Petter bor i Norge. Norge er et land i nord"
@@ -16,7 +17,7 @@
     (is (search/find-phrase-str index "Dette er"))
     (is (search/find-phrase-str index "Norge er"))
     (is (not (search/find-phrase-str index "Norge skriver")) "Should not pass")
-    (is (search/find-phrase-str index "i nord"))
+    (is (search/find-phrase-str index "i nord")) 
     )
   )
 
