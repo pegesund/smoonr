@@ -1,9 +1,11 @@
 (ns lang.tests
   (:use clojure.test)
-  (:require [lang.structures :as s])
+  (:require [lang.structures :as s]
+            [lang.search :as search]
+            )
   )
 
-(deftest world-is-sane (is 8 8))
+(deftest meaning-of-life (is 42 42))
 
 (deftest test-phrase-search
   (let [wc (s/create-word-counters)
@@ -11,10 +13,10 @@
         s "Dette er Petter som skriver. Petter bor i Norge. Norge er et land i nord"
         _a (s/add-string-to-field f s 100)
         index (s/phrase-index s)]
-    (is (s/find-phrase-str index "Dette er"))
-    (is (s/find-phrase-str index "Norge er"))
-    (is (not (s/find-phrase-str index "Norge skriver")) "Should not pass")
-    (is (s/find-phrase-str index "i nord"))
+    (is (search/find-phrase-str index "Dette er"))
+    (is (search/find-phrase-str index "Norge er"))
+    (is (not (search/find-phrase-str index "Norge skriver")) "Should not pass")
+    (is (search/find-phrase-str index "i nord"))
     )
   )
 
