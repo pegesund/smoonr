@@ -43,7 +43,7 @@
   "Creates a Field-record.
    The colt-arrays in the word-counters are stored directely in the records, due to speed.
    A Field record contains:
-    - docs of type a treemap of colt-arrays, each array is as long as there are number of words
+    - docs of type a treemap of colt-arrays, each array contains a sorted list of doc-id's
     - word-total a colt-array where idx is word number and val is number of occurences
     - word-in-docs a colt-array where idx is word number and val is number of docs where this word occure
     - number of words in the field

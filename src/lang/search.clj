@@ -52,7 +52,41 @@
   (let [word_ids (s/string-to-ids str)]
     (find-phrase field word_ids)))
 
-;(defin find-all-docs-with-word [field str]
-;  "Finds all docs where whe word appear. The string is unparsed"
-;  (let [s (clojure.string/lower-case str)]
+
+(defn find-all-docs-with-id [field word_id]
+  "Find all docs where word-id appear"
+  (let [res (get @(:docs field) word_id)]
+        (or res []))
+  )
+
+
+
+(defn find-all-docs-with-word [field str]
+  "Finds all docs where the word appear. The string is unparsed"
+  (let [s (clojure.string/lower-case str)
+        word_id (get @s/words s)]
+        (find-all-docs-with-id field word_id)))
+
+
+(defn join-results [d1 d2]
+  "Joins two DocExist-records.
+   If a word is fould in d2 it is increased in d1
+   otherwise the word is added to d1"
+  (let [doc1 (:doc d1)
+        doc2 (:doc d2)
+        num1 (:num d1)
+        num2 (:num d2)
+        size_1 (.size doc1)
+        size_2 (.size doc2)
+        d3 (.clone doc1)]
+    (dotimes [i size_2] 
+      (let [word_nr (.getQuick doc2 i)
+            word_val (.getQuick num2 i)
+            pos (.binarySearchFromTo d3 word_nr 0 size_1)]
+        (println "Pos " pos)
+        )
+      )
+    )
+  )
     
+   
