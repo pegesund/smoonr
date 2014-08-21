@@ -69,12 +69,6 @@
         (find-all-docs-with-id field word_id)))
 
 
-; (defn join-results [d1 d2]
-;  "Joins two DocExist-records.
-;   If a word is fould in d2 it is increased in d1
-;   otherwise the word is added to d1"
-;  (let [si
-    
 (defmacro forColt [[[i val] colt-arr] & code]
   `(let [finish# (.size ~(with-meta colt-arr {:tag 'IntArrayList}))]
      (loop [ ~i 0]
@@ -84,4 +78,24 @@
            (recur (inc ~i)))))))
 
 
+(defmacro forColtResult [[[i val] start-res colt-arr] & code]
+  "Use like this: (forColtResult [[i val] {100 101} colt-arr] [i val])"
+  `(let [finish# (.size ~(with-meta colt-arr {:tag 'IntArrayList}))
+         res# (transient ~start-res)
+         ]
+     (loop [ ~i 0]
+       (let [~val (.getQuick ~(with-meta colt-arr {:tag 'IntArrayList}) ~i)]
+         (if (< ~i finish#)
+           (do
+             (assoc! res# (first ~@code) (second ~@code))
+             (recur (inc ~i))
+             ) 
+           (persistent! res#)
+             )))))
 
+
+
+;(defn join-colt-colt [c1 c2]
+;  (let [
+;  (forColt [[i val] ]
+;           (
