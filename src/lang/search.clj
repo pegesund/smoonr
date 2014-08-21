@@ -1,6 +1,7 @@
 (ns lang.search
   ; (:use clojure.structures)
   (:require [lang.structures :as s])
+  (:import (cern.colt.list.tint IntArrayList))
   )
     
 (defn find-phrase [index str-ids]
@@ -9,32 +10,32 @@
          num_a (:num index)
          pos_a (:pos index)
          start_a (:start index)
-         word_a_size (.size word_a)
+         word_a_size (.size ^IntArrayList word_a)
          mother-id (first str-ids)
-         mother-pos (.binarySearchFromTo word_a mother-id 0 word_a_size)
+         mother-pos (.binarySearchFromTo ^IntArrayList word_a mother-id 0 word_a_size)
          ]
     (if (< mother-pos 0)
       false
-      (let [mother-num (.get num_a mother-pos)
-            mother-start (.get start_a mother-pos)
+      (let [mother-num (.get ^IntArrayList num_a mother-pos)
+            mother-start (.get ^IntArrayList start_a mother-pos)
             ]
         (loop [mother-ndx 0]
           (if (= mother-ndx mother-num)
             false
             (let [res
-                  (let [mother-txt-pos (.get pos_a (+ mother-start mother-ndx))]
+                  (let [mother-txt-pos (.get ^IntArrayList pos_a (+ mother-start mother-ndx))]
                     (loop [lookfor (rest str-ids)
                            lookfor-txt-pos (inc mother-txt-pos)
                            ]
                       (if (empty? lookfor)
                         true
                         (let [lookfor-child (first lookfor)
-                              child-pos (.binarySearchFromTo word_a lookfor-child 0 word_a_size)]
+                              child-pos (.binarySearchFromTo ^IntArrayList word_a lookfor-child 0 word_a_size)]
                           (if (< child-pos 0)
                             false
-                            (let [child-num (.get num_a child-pos)
-                                  child-start (.get start_a child-pos)
-                                  child-pos-found (.binarySearchFromTo pos_a lookfor-txt-pos child-start (+ child-start child-num)) ]
+                            (let [child-num (^int .get ^IntArrayList num_a child-pos)
+                                  child-start (^int .get ^IntArrayList start_a child-pos)
+                                  child-pos-found (.binarySearchFromTo ^IntArrayList pos_a lookfor-txt-pos child-start (+ child-start child-num)) ]
                               (if (< child-pos-found 0)
                                 false
                                 (recur (rest lookfor) (inc lookfor-txt-pos)))))))))]
@@ -68,25 +69,19 @@
         (find-all-docs-with-id field word_id)))
 
 
-(defn join-results [d1 d2]
-  "Joins two DocExist-records.
-   If a word is fould in d2 it is increased in d1
-   otherwise the word is added to d1"
-  (let [doc1 (:doc d1)
-        doc2 (:doc d2)
-        num1 (:num d1)
-        num2 (:num d2)
-        size_1 (.size doc1)
-        size_2 (.size doc2)
-        d3 (.clone doc1)]
-    (dotimes [i size_2] 
-      (let [word_nr (.getQuick doc2 i)
-            word_val (.getQuick num2 i)
-            pos (.binarySearchFromTo d3 word_nr 0 size_1)]
-        (println "Pos " pos)
-        )
-      )
-    )
-  )
+; (defn join-results [d1 d2]
+;  "Joins two DocExist-records.
+;   If a word is fould in d2 it is increased in d1
+;   otherwise the word is added to d1"
+;  (let [si
     
-   
+(defmacro forColt [[[i val] colt-arr] & code]
+  `(let [finish# (.size ~(with-meta colt-arr {:tag 'IntArrayList}))]
+     (loop [ ~i 0]
+       (let [~val (.getQuick ~(with-meta colt-arr {:tag 'IntArrayList}) ~i)]
+         (when (< ~i finish#)
+           ~@code
+           (recur (inc ~i)))))))
+
+
+
