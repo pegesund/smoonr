@@ -47,6 +47,23 @@
       )
     )        
   )         
+
+
+(defmacro forColtResult [[[i val] start-res colt-arr] & code]
+  "Use like this: (forColtResult [[i val] (transient {100 101}) colt-arr] [i val])"
+  `(let [finish# (.size ~(with-meta colt-arr {:tag 'IntArrayList}))
+         res# ~start-res
+         ]
+     (loop [ ~i 0]
+       (let [~val (.getQuick ~(with-meta colt-arr {:tag 'IntArrayList}) ~i)]
+         (if (< ~i finish#)
+           (do
+             (let [exec# ~@code] (when exec# (assoc! res# (first exec#) (second exec#))))
+             (recur (inc ~i))
+             ) 
+           res#
+             )))))
+
             
 (defn find-phrase-str [field str]
 "Find str in a field"
@@ -54,11 +71,26 @@
     (find-phrase field word_ids)))
 
 
+(defn find-all-docs-with-id-arr [field word_id]
+  "Find all docs where word-id appear. Returns a record of type DocExist"
+  (get @(:docs field) word_id)
+)
+      
+      
+
 (defn find-all-docs-with-id [field word_id]
-  "Find all docs where word-id appear"
+  "Find all docs where word-id appear. Returns a transient hash"
   (let [res (get @(:docs field) word_id)]
-        (or res []))
-  )
+    (if-not res
+      {}
+      (let [nums (:num res)]
+        (forColtResult [[i val] (transient {}) (:doc res)]
+                        [val (.getQuick ^IntArrayList nums i)]
+                        ) 
+        )
+      )
+    )
+)
 
 
 
@@ -77,25 +109,32 @@
            ~@code
            (recur (inc ~i)))))))
 
+(defn q-or [field start-hash word-ids]
+  "Find all docs and where all words exist.
+   start-hash is a transient hash containing word - val, can be an transient({}) if there is no starting-point
+  "
+    (loop [rest-words word-ids]
+      (if (empty? rest-words)
+        start-hash
+        (let [word-id (first rest-words)
+              matching (find-all-docs-with-id-arr field word-id)
+              matching-doc (:doc matching)
+              matching-num (:num matching)
+              ]
+          (forColtResult [[i doc-id] start-hash matching-doc]
+                         (let [num (.getQuick ^IntArrayList matching-num i)
+                               old_num (get start-hash doc-id)]
+                           (if old_num
+                             [doc-id (+ num old_num)]
+                             [doc-id num])
+                           )
+                         )
+          (recur (rest rest-words))
+          )
+        )
+      )
+    )
 
-(defmacro forColtResult [[[i val] start-res colt-arr] & code]
-  "Use like this: (forColtResult [[i val] {100 101} colt-arr] [i val])"
-  `(let [finish# (.size ~(with-meta colt-arr {:tag 'IntArrayList}))
-         res# (transient ~start-res)
-         ]
-     (loop [ ~i 0]
-       (let [~val (.getQuick ~(with-meta colt-arr {:tag 'IntArrayList}) ~i)]
-         (if (< ~i finish#)
-           (do
-             (assoc! res# (first ~@code) (second ~@code))
-             (recur (inc ~i))
-             ) 
-           (persistent! res#)
-             )))))
 
-
-
-;(defn join-colt-colt [c1 c2]
-;  (let [
-;  (forColt [[i val] ]
-;           (
+                               
+          

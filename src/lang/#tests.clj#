@@ -63,7 +63,6 @@
           ]
       (is (= {100 3, 101 2} (persistent! docs1)))
       (is (= {100 1} (persistent! docs2)))
-          
       )
     )
   )

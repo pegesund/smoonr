@@ -224,7 +224,6 @@
         ]
     (doseq [id sorted_wordid]
       (let [positions (keep-indexed #(if (= %2 id) %1) word_list_id)]
-        (println "id: " id " positions: " positions)
         (.add word_a id)
         (.add num_a (count positions))
         (.add start_a (.size pos_a))
