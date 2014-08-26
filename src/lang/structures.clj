@@ -23,6 +23,13 @@
 )
 
 
+(defonce all-fields (atom {}))
+
+(defn add-to-fields [name field]
+  "Adds a field to global field-map"
+  (swap! all-fields assoc name field)
+)
+
 (defn create-doc-ndx []
   "Creates a treeMap which contains all documents in a collection. Doc-id which is the key is a string"
   (new java.util.TreeMap)
@@ -39,9 +46,6 @@
   (swap! words #(assoc % word new-word-id)))
 
 
-
-
-
 (defn create-word-counters []
   "Creates word-counters.
    word-total in the number of times a word has occured
@@ -54,7 +58,7 @@
   )
 
 
-(defn create-field [word-counter]
+(defn create-field [name word-counter]
   "Creates a Field-record.
    The colt-arrays in the word-counters are stored directely in the records, due to speed.
    A Field record contains:
@@ -66,15 +70,17 @@
     - number of docs
   "
   (let [word-total (:word-total word-counter)
-        word-in-docs (:word-in-docs word-counter)]
-  (Field.
-   (atom {})
-   word-total
-   word-in-docs
-   (atom 0)
-   (atom 0)
-   (atom 0)
-   )
+        word-in-docs (:word-in-docs word-counter)
+        field (Field.
+               (atom {})
+               word-total
+               word-in-docs
+               (atom 0)
+               (atom 0)
+               (atom 0)
+               )]
+    (add-to-fields name field)
+    field
   )
 )
 

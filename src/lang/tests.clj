@@ -10,7 +10,7 @@
 (deftest test-phrase-search
   "test if a phrase if found in compressed string"
   (let [wc (s/create-word-counters)
-        f (s/create-field wc)
+        f (s/create-field "f1" wc)
         s "Dette er Petter som skriver. Petter bor i Norge. Norge er et land i nord"
         _a (s/add-string-to-field f s 100)
         index (s/phrase-index s)]
@@ -24,7 +24,7 @@
 (deftest find-a-word-in-field
   "Find all occurences of a word in a field"
   (let [wc (s/create-word-counters)
-        f (s/create-field wc)
+        f (s/create-field "f2" wc)
         s1 "This is Petter writing. Petter writes a lot."
         s2 "Petter lives in Norway."]
     (s/add-string-to-field f s1 100)
@@ -41,10 +41,10 @@
   )
 
 
-(deftest test-search
+(deftest test-logical-search
   "Try or search"
   (let [wc (s/create-word-counters)
-        f (s/create-field wc)
+        f (s/create-field "f3" wc)
         s1 "This is Petter writing. Petter writes a lot. Petter should drink less."
         s2 "Petter lives in Norway."
         s3 "This string contains rubbish"
