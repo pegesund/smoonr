@@ -7,4 +7,5 @@
                  [net.sourceforge.parallelcolt/parallelcolt "0.10.0"]
                  [org.clojure/clojure "1.6.0"]
                  [clucy "0.4.0"]
+                 [instaparse "1.3.3"]
                  ])

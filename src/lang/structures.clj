@@ -2,6 +2,26 @@
   ; (:require [cern.colt.list :as colt])
 )
 
+(defrecord WordCounters
+    [ word-total word-in-docs ]
+)
+
+(defrecord Field
+    [ docs word-total word-in-docs num-words num-words-unique num-docs]
+)
+
+(defrecord DocExist
+    [ doc num ]
+)
+
+(defrecord Doc
+    [ words num phrase ]
+)
+
+(defrecord PhraseIndex 
+    [word num start pos]
+)
+
 
 (defn create-doc-ndx []
   "Creates a treeMap which contains all documents in a collection. Doc-id which is the key is a string"
@@ -19,9 +39,7 @@
   (swap! words #(assoc % word new-word-id)))
 
 
-(defrecord WordCounters
-    [ word-total word-in-docs ]
-)
+
 
 
 (defn create-word-counters []
@@ -35,9 +53,6 @@
    )
   )
 
-(defrecord Field
-    [ docs word-total word-in-docs num-words num-words-unique num-docs]
-)
 
 (defn create-field [word-counter]
   "Creates a Field-record.
@@ -64,9 +79,6 @@
 )
 
 
-(defrecord DocExist
-    [ doc num ]
-)
     
 (defn create-doc-exist [ ]
   "create two colt-arrays containing word-ndx and word-counter"  
@@ -160,9 +172,6 @@
     ))
 
 
-(defrecord Doc
-    [ words num phrase ]
-)
     
 (defn create-doc [ words num phrase ]
   "Creates a doc where all arguments should be of type colt-array.
@@ -191,9 +200,6 @@
  )
 )
  
-(defrecord PhraseIndex 
-    [word num start pos]
-)
 
 (defn create-phrase-index []
   "word - an colt array of word id

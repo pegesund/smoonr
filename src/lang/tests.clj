@@ -34,14 +34,14 @@
           docs1 (search/find-all-docs-with-id f word-id1)
           docs2 (search/find-all-docs-with-id f word-id2)
           ]
-          (is (= {100 2, 101 1} (persistent! docs1)))
-          (is (= {100 1} (persistent! docs2)))
+          (is (= #{100 101} docs1))
+          (is (= #{100} docs2))
           )
     )
   )
 
 
-(deftest test-or-search
+(deftest test-search
   "Try or search"
   (let [wc (s/create-word-counters)
         f (s/create-field wc)
@@ -58,12 +58,11 @@
     (let [word-id1 (get @s/words "petter")
           word-id2 (get @s/words "lives")
           word-id3 (get @s/words "lot")
-          docs1 (search/q-or f res [word-id1 word-id2])
-          docs2 (search/q-or f res2 [word-id3])
+          docs1 (search/logic-query f word-id1 word-id2 :or)
+          docs2 (search/logic-query f word-id1 word-id2 :and)
           ]
-      (is (= {100 3, 101 2} (persistent! docs1)))
-      (is (= {100 1} (persistent! docs2)))
-          
+      (is (= docs1 #{100 101}))
+      (is (= #{101} docs2))
       )
     )
   )
