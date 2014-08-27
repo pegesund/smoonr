@@ -79,7 +79,7 @@
                                                             )
      (= :phrase left) (phrase ["extract later"] current-field)
      (= :word left) (pword (second tree) current-field)
-     :else (println "No match, world falls apart: " tree)
+     :else (println "No match and world falls apart: " tree)
      )
     )
 )

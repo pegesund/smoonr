@@ -23,7 +23,14 @@
 )
 
 
-(defonce all-fields (atom {}))
+(defonce all-fields
+  ; "Keeps track of all fields. Defined as name - Field"
+ (atom {}))
+
+(defonce all-phrases
+  ; "Keeps track of all phrase-vectors. Defined as docid - PhraseIndex"
+ (atom {}))
+
 
 (defn add-to-fields [name field]
   "Adds a field to global field-map"
@@ -161,7 +168,7 @@
     (filter #(not= "" %)  (clojure.string/split s_lc split-string))))
 
 (defn string-to-ids [str]
-  "Maps a string to word-ids. Not known id's are substituted with -1 - an impossible number"
+  "Maps a string to word-ids. Not known id's are substituted with -1 - an impossible-to-find-number"
   (map #(let [w (get @words %)] (if w w -1))
        (string-to-words str)))
 
@@ -170,12 +177,16 @@
 
 
 (defn add-string-to-field [field doc docid]
-  "Main function to add a doc/str to a field. It adds word to global-word hash if needed"
+  "Main function to add a doc/str to a field. It adds word to global-word hash if needed. Adds doc to phrase index."
   (let [wordlist (string-to-map doc)]
     (doseq [[word word-num] wordlist]
       (add-word-to-field field word word-num docid)
       )
-    ))
+    )
+  (let [index (phrase-index doc)]
+    (swap! all-phrases assoc docid index)
+    )
+  )
 
 
     
