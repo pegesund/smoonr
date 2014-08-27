@@ -39,21 +39,20 @@
 (declare search-tree)
 
 (defn plogic [p1 p2 operator current-field]
-  (println "Operator: " operator " p1: " p1 " p2: " p2)
   (case operator
     :and (clojure.set/intersection (search-tree p1 current-field) (search-tree p2 current-field))
     :or (clojure.set/union (search-tree p1 current-field) (search-tree p2 current-field))
-    :ok
+    :not-ok
     )
   )
 
 
-(defn phrase [words]
+(defn phrase [words current-field]
   (println "Parsing phrase")
   #{10 11 1}
 )
 
-(defn pword [word]
+(defn pword [word current-field]
   (println "Parsing word: " word)
   (case word
     "vvv" #{1 2 3}
@@ -66,26 +65,21 @@
 
 (defn search-tree [tree current-field]
   "Executes a search based on a parsed tree-structure"
-  (println "Field: " current-field "-- Search-tree: " tree)
   (let [left (first tree)]
-    (println "Left: " left)
     (cond
-     (= left :field-sentences) (do (println "    Parsing field-sentences") (search-tree (first (rest tree)) nil))
-     (= left :field-sentence) (do (println "    Parsing field-sentence") (search-tree (rest tree) nil))
-     (safe-test (= (first left) :field-name)) (do (println "    Parsing field-name") (search-tree (first (rest tree)) (second (first tree))))
+     (= left :field-sentences) (search-tree (first (rest tree)) nil)
+     (= left :field-sentence) (search-tree (rest tree) nil)
+     (safe-test (= (first left) :field-name)) (search-tree (first (rest tree)) (second (first tree)))
      (or (= left :logic-bind) (= left :field-logic-bind)) (do
-                                                            (println "Parsing logic")
                                                             (let [p1 (nth tree 1)
                                                                   operator (first (nth tree 2))
                                                                   p2 (nth tree 3)]
                                                               (plogic p1 p2 operator current-field)
                                                               )
                                                             )
-     (= :phrase left) (do (println "    parsing phrase")
-                         (phrase ["extract later"]))
-     (= :word left) (pword (second tree))
-                                  
-     :else (println "No match on: " tree)
+     (= :phrase left) (phrase ["extract later"] current-field)
+     (= :word left) (pword (second tree) current-field)
+     :else (println "No match, world falls apart: " tree)
      )
     )
 )
