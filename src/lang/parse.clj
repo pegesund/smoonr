@@ -54,9 +54,36 @@
   )
 
 
+(defn phrase-and [words current-field]
+  "Finds all occurences of where all the words occurs in a field"
+  (let [field (get @s/all-fields current-field)]
+    (if-not field
+      (throw (Exception. (str "This field is not defined: " current-field)))
+      (let [word-ids (keep #(get @s/words (second %)) (rest words))
+            start-and (search/find-all-docs-with-id field (first word-ids))]
+        (loop [acc start-and
+               l (rest word-ids)
+               ]
+          (if (empty? l)
+            [acc word-ids field]
+            (let [new-docs (search/find-all-docs-with-id field (first l))
+                  and-docs (clojure.set/intersection acc new-docs)]
+              (recur and-docs (rest l))
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+
 (defn phrase [words current-field]
-  (println "Parsing phrase")
-  #{10 11 1}
+  (let [[and-docs word-ids field] (phrase-and words current-field)
+        res (filter #(search/find-phrase 
+                  (get @s/all-phrases %)
+                  word-ids) and-docs)]
+    (into #{} res)
+    )
 )
 
 (defn pword [word current-field]
@@ -79,14 +106,13 @@
      (= left :field-sentences) (search-tree (first (rest tree)) nil)
      (= left :field-sentence) (search-tree (rest tree) nil)
      (safe-test (= (first left) :field-name)) (search-tree (first (rest tree)) (second (first tree)))
-     (or (= left :logic-bind) (= left :field-logic-bind)) (do
-                                                            (let [p1 (nth tree 1)
-                                                                  operator (first (nth tree 2))
-                                                                  p2 (nth tree 3)]
-                                                              (plogic p1 p2 operator current-field)
-                                                              )
-                                                            )
-     (= :phrase left) (phrase ["extract later"] current-field)
+     (or (= left :logic-bind) (= left :field-logic-bind))
+         (let [p1 (nth tree 1)
+               operator (first (nth tree 2))
+               p2 (nth tree 3)]
+           (plogic p1 p2 operator current-field)
+           )
+     (= :phrase left) (phrase tree current-field)
      (= :word left) (pword (second tree) current-field)
      :else (println "No match and world falls apart: " tree)
      )

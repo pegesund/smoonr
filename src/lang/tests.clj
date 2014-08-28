@@ -111,5 +111,31 @@
     )
   )
 
+(deftest test-phrase-parser
+  "Test out phrase searches in parsed queries"
+  (let [wc (s/create-word-counters)
+        p1 (s/create-field "p1" wc)
+        p2 (s/create-field "p2" wc)
+        s1 "This is Petter writing. Petter writes a lot. Petter should drink less."
+        s2 "Petter lives in Norway."
+        s3 "This string contains rubbish"
+        s4 "Petter is only a true believer when it comes to C. Petter writes nonesense."
+        ]
+    (s/add-string-to-field p1 s1 100)
+    (s/add-string-to-field p1 s2 101)
+    (s/add-string-to-field p2 s3 102)
+    (s/add-string-to-field p2 s4 103)
+    (let [word-id1 (get @s/words "petter")
+          word-id2 (get @s/words "lives")
+          word-id3 (get @s/words "writes")
+          word-id4 (get @s/words "only")]
+      (is (= #{} (parse/search "p1:\"petter only\"")))
+      (is (= #{100} (parse/search "p1:\"petter writes\"")))
+      (is (= #{100 103} (parse/search "p1:\"petter writes\" OR p2:\"petter writes nonsense\"")))
+      )
+    )
+  )
+
+
 
 (run-tests 'lang.tests)
