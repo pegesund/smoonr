@@ -2,6 +2,9 @@
   ; (:require [cern.colt.list :as colt])
 )
 
+(set! *warn-on-reflection* false)
+(set! *unchecked-math* true)
+
 (defrecord WordCounters
     [ word-total word-in-docs ]
 )
@@ -175,6 +178,7 @@
 (defn string-to-map [str]
   (count-words (string-to-words str)))
 
+(declare phrase-index)
 
 (defn add-string-to-field [field doc docid]
   "Main function to add a doc/str to a field. It adds word to global-word hash if needed. Adds doc to phrase index."

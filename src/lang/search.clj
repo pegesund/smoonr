@@ -3,7 +3,10 @@
   (:require [lang.structures :as s])
   (:import (cern.colt.list.tint IntArrayList))
   )
-    
+   
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* true)
+ 
 (defn find-phrase [index str-ids]
   "Find phrase in the index. Lookfor is a seq of word-idx"
   (let  [word_a (:word index)

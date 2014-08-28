@@ -9,4 +9,6 @@
                  [clucy "0.4.0"]
                  [instaparse "1.3.3"]
                  [org.clojure/core.match "0.2.1"]
-                 ])
+                 ]
+  :main lang.parse
+  )
