@@ -62,8 +62,8 @@
    word-in-docs is the number of docs a word has appeared in
   "
   (WordCounters.
-   (new cern.colt.list.tlong.LongArrayList)
-   (new cern.colt.list.tlong.LongArrayList)
+   (new IntArrayList)
+   (new IntArrayList)
    )
   )
 
@@ -121,7 +121,7 @@
   )
 
 
-(defn safe-inc-num-words [^cern.colt.list.tlong.LongArrayList colt-array ndx inc-val]
+(defn safe-inc-num-words [^IntArrayList colt-array ndx inc-val]
   "Increases colt array at pos ndx with inc-val. Ensures that capacity is enough, fills array with zero if there are gaps in "
   (try
     (let [old-val (.get colt-array ndx)]
