@@ -1,4 +1,4 @@
-(ns lang.lucene
+(ns lang.benchmark.lucene
   (:require [clucy.core :as clucy])
   (:import (java.io StringReader File)
            (org.apache.lucene.analysis Analyzer TokenStream)
