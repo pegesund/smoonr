@@ -1,8 +1,8 @@
 (ns lang.structures
-  ; (:require [cern.colt.list :as colt])
+ (:import (cern.colt.list.tint IntArrayList))
 )
 
-(set! *warn-on-reflection* false)
+(set! *warn-on-reflection* true)
 (set! *unchecked-math* true)
 
 (defrecord WordCounters
@@ -102,8 +102,8 @@
 )
 
 (defn add-sorted-to-doc-exist [ doc-exist word-ndx num ]
-  (let [arr-doc (:doc doc-exist)
-        arr-num (:num doc-exist)
+  (let [^IntArrayList arr-doc (:doc doc-exist)
+        ^IntArrayList arr-num (:num doc-exist)
         arr-size (.size arr-doc)]
     (if (= 0 arr-size)
       (do (.add arr-doc word-ndx) (.add arr-num num))
@@ -121,7 +121,7 @@
   )
 
 
-(defn safe-inc-num-words [colt-array ndx inc-val]
+(defn safe-inc-num-words [^cern.colt.list.tlong.LongArrayList colt-array ndx inc-val]
   "Increases colt array at pos ndx with inc-val. Ensures that capacity is enough, fills array with zero if there are gaps in "
   (try
     (let [old-val (.get colt-array ndx)]
@@ -244,10 +244,10 @@
         word_list_id (map #(get @words %) word_list)
         sorted_wordid (sort (distinct word_list_id))
         phrase_index (create-phrase-index)
-        word_a (:word phrase_index)
-        num_a (:num phrase_index)
-        pos_a (:pos phrase_index)
-        start_a (:start phrase_index)
+        ^IntArrayList word_a (:word phrase_index)
+        ^IntArrayList num_a (:num phrase_index)
+        ^IntArrayList pos_a (:pos phrase_index)
+        ^IntArrayList start_a (:start phrase_index)
         ]
     (doseq [id sorted_wordid]
       (let [positions (keep-indexed #(if (= %2 id) %1) word_list_id)]

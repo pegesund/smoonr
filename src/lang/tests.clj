@@ -6,7 +6,7 @@
             )
   )
 
-(deftest meaning-of-life (is 42 42))
+(deftest meaning-of-life (is (= 42 42)))
 
 (deftest test-phrase-search
   "test if a phrase if found in compressed string"
@@ -132,6 +132,7 @@
       (is (= #{} (parse/search "p1:\"petter only\"")))
       (is (= #{100} (parse/search "p1:\"petter writes\"")))
       (is (= #{100 103} (parse/search "p1:\"petter writes\" OR p2:\"petter writes nonsense\"")))
+      (is (= #{100 101 103} (parse/search "p1:petter OR (p1:\"petter writes\" OR p2:\"petter writes nonsense\")")))
       )
     )
   )
