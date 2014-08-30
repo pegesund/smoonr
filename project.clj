@@ -9,6 +9,9 @@
                  [clucy "0.4.0"]
                  [instaparse "1.3.3"]
                  [org.clojure/core.match "0.2.1"]
+                 [org.clojure/data.xml "0.0.8"]
+                 [org.clojure/data.zip "0.1.1"]
                  ]
-  :main lang.parse
+  :main lang.benchmarks.wikismoonr
+  :jvm-opts ["-Xmx7g" "-server"] 
   )
