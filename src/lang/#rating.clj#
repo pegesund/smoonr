@@ -1,9 +1,0 @@
-(ns lang.rating
-  (:use clojure.test)
-  (:require [lang.structures :as s]
-            [lang.search :as search]
-            [lang.parse :as parse]
-            )
-  )
-
-(tfidf (tree 
