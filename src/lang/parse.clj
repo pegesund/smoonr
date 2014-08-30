@@ -45,10 +45,10 @@
 
 (declare search-tree)
 
-(defn plogic [p1 p2 operator current-field]
+(defn plogic [p1 p2 operator current-field words-acc]
   (case operator
-    :and (clojure.set/intersection (search-tree p1 current-field) (search-tree p2 current-field))
-    :or (clojure.set/union (search-tree p1 current-field) (search-tree p2 current-field))
+    :and (clojure.set/intersection (search-tree p1 current-field words-acc) (search-tree p2 current-field) words-acc)
+    :or (clojure.set/union (search-tree p1 current-field words-acc) (search-tree p2 current-field words-acc))
     :not-ok
     )
   )
@@ -77,20 +77,22 @@
     )
   )
 
-(defn phrase [words current-field]
+(defn phrase [words current-field words-acc]
   (let [[and-docs word-ids field] (phrase-and words current-field)
         res (filter #(search/find-phrase 
                   (get @s/all-phrases %)
                   word-ids) and-docs)]
+    (conj! words-acc word-ids)
     (into #{} res)
     )
 )
 
-(defn pword [word current-field]
+(defn pword [word current-field words-acc]
   (let [field (get @s/all-fields current-field)]
     (if-not field
       (throw (Exception. (str "This field is not defined: " current-field)))
       (let [word-id (get @s/words word)]
+        (conj! words-acc word-id)
         (search/find-all-docs-with-id field word-id)
         )
       )
@@ -99,53 +101,33 @@
 
 
 
-(defn search-tree [tree current-field]
+(defn search-tree [tree current-field words-acc]
   "Executes a search based on a parsed tree-structure"
   (let [left (first tree)]
     (cond
-     (= left :field-sentences) (search-tree (first (rest tree)) nil)
-     (= left :field-sentence) (search-tree (rest tree) nil)
-     (safe-test (= (first left) :field-name)) (search-tree (first (rest tree)) (second (first tree)))
+     (= left :field-sentences) (search-tree (first (rest tree)) nil words-acc)
+     (= left :field-sentence) (search-tree (rest tree) nil words-acc)
+     (safe-test (= (first left) :field-name)) (search-tree (first (rest tree)) (second (first tree)) words-acc)
      (or (= left :logic-bind) (= left :field-logic-bind))
          (let [p1 (nth tree 1)
                operator (first (nth tree 2))
                p2 (nth tree 3)]
-           (plogic p1 p2 operator current-field)
+           (plogic p1 p2 operator current-field words-acc)
            )
-     (= :phrase left) (phrase tree current-field)
-     (= :word left) (pword (second tree) current-field)
+     (= :phrase left) (phrase tree current-field words-acc)
+     (= :word left) (pword (second tree) current-field words-acc)
      :else (println "No match and world falls apart: " tree)
      )
     )
 )
          
 (defn search [query]
-  (let [tree (parse-query query)]
-    (search-tree tree nil)
+  (let [tree (parse-query query)
+        words-acc (transient [])
+        ]
+    [(search-tree tree nil words-acc) (persistent! words-acc)]
     )
   )
 
 ; try with (clojure.pprint/pprint (parse-query "field:\"xxx  vvv\" OR bbb AND (fto:yyy AND bbb OR xx:vvv)"))
 
-(defn minibench []
-  (let [wc (s/create-word-counters)
-        f1 (s/create-field "f1" wc)
-        f2 (s/create-field "f2" wc)
-        s1 "This is Petter writing. Petter writes a lot. Petter should drink less."
-        s2 "Petter lives in Norway."
-        s3 "This string contains rubbish"
-        s4 "Petter is only a true believer when it comes to C"
-        ]
-    (s/add-string-to-field f1 s1 100)
-    (s/add-string-to-field f1 s2 101)
-    (s/add-string-to-field f1 s3 102)
-    (s/add-string-to-field f2 s4 103)    
-    (dotimes [_ 1000] (time (dotimes [_ 1000] (search "f1:petter OR (f2:petter OR (f2:rubbish AND f1:petter))"))))
-    )
-  )
-
-(defn -main
-  "The application's main function"
-  [& args]
-  (minibench)
-  )
