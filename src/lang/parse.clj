@@ -6,6 +6,7 @@
             [lang.search :as search]
             [lang.parse :as parse]
             )
+  (:import (cern.colt.list.tint IntArrayList))
   (:gen-class :main true)
   )
 
@@ -79,8 +80,10 @@
 
 (defn phrase [words current-field words-acc]
   (let [[and-docs word-ids field] (phrase-and words current-field)
+        field (get @s/all-fields current-field)
+        phrases (:phrases field)
         res (filter #(search/find-phrase 
-                  (get @s/all-phrases %)
+                  (get phrases %)
                   word-ids) and-docs)]
     (doseq [word-id word-ids] (conj! words-acc [current-field word-id]))
     (into #{} res)

@@ -10,8 +10,8 @@
     [ word-total word-in-docs ]
 )
 
-(defrecord Field
-    [ docs word-total word-in-docs num-words num-words-unique num-docs]
+(defrecord FieldContent
+    [ docs word-total word-in-docs num-words num-words-unique num-docs phrases ]
 )
 
 (defrecord DocExist
@@ -29,10 +29,6 @@
 
 (defonce all-fields
   ; "Keeps track of all fields. Defined as name - Field"
- (atom {}))
-
-(defonce all-phrases
-  ; "Keeps track of all phrase-vectors. Defined as docid - PhraseIndex"
  (atom {}))
 
 
@@ -79,16 +75,18 @@
     - number of words in the field
     - number of words unique  (length of word-map)
     - number of docs
+    - an index of all phrases. Type id - phrase-index 
   "
   (let [word-total (:word-total word-counter)
         word-in-docs (:word-in-docs word-counter)
-        field (Field.
+        field (FieldContent.
                (atom {})
                word-total
                word-in-docs
                (atom 0)
                (atom 0)
                (atom 0)
+               (atom {})
                )]
     (add-to-fields name field)
     field
@@ -189,25 +187,11 @@
       )
     )
   (swap! (:num-docs field) inc)
-  (let [index (phrase-index doc)]
-    (swap! all-phrases assoc docid index)
-    ;; add debug info
-    ; (comment
-      (let [wordlist (string-to-map doc)
-            word-ids (map #(get @words %) (keys wordlist))
-            ]
-        (println "----- Doc-id" docid  " Wordlist: " wordlist " word-ids: " word-ids "keys: " (keys wordlist)  " doc: " doc " index: " index )
-        ; (doseq [word-id word-ids]
-          ; (println "word-id: " word " word-id: " (get @words word)  " index: " index)
-          ; (when-not (search/find-phrase index (list word-id))
-          ;    (println "-- strange things, with word: " word-id " not found in: " index)
-         ;     )
-        ;  nil
-       ;   )
-        )
-   ;   )
-
-  )
+  (let [index (phrase-index doc)
+        phrases (:phrases field)
+        ]
+    (swap! phrases assoc docid index)
+    )
 )
 
 
@@ -284,7 +268,6 @@
  
 (defn reset-all []
   (reset! words {})
-  (reset! all-phrases {})
   (reset! all-fields {})
   (reset! word-id-creator 0)
 )
