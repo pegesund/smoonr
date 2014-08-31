@@ -38,7 +38,7 @@
   (doseq [e
           (->> (parse rdr)
               :content
-              ; (take 4)
+              (take 2)
               )]
     (when (= (:tag e) :page)
       (try
@@ -51,7 +51,7 @@
              (swap! doc-id inc)
              (swap! counter #(+ % 1))
              (swap! last-title #(or title %))
-             (when (= 0 (mod @counter 1000))
+             (when (= 0 (mod @counter 100))
                (let [new-time (quot (System/currentTimeMillis) 1000)
                      time-diff (- new-time @timer)]
                  (println @counter " - " time-diff)

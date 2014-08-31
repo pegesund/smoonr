@@ -3,6 +3,7 @@
   (:require [lang.structures :as s]
             [lang.search :as search]
             [lang.parse :as parse]
+            [lang.rating :as rate]
             )
   )
 
@@ -50,7 +51,6 @@
         s2 "Petter lives in Norway."
         s3 "This string contains rubbish"
         ]
-    (println "Starting test-or-search")
     (s/add-string-to-field f s1 100)
     (s/add-string-to-field f s2 101)
     (s/add-string-to-field f s3 102)
@@ -65,6 +65,9 @@
       )
     )
   )
+
+(defn search [str]
+  (first (parse/search str)))
 
 (deftest test-query-parser
   "Try or search"
@@ -84,17 +87,17 @@
           word-id2 (get @s/words "lives")
           word-id3 (get @s/words "lot")
           word-id4 (get @s/words "only")
-          docs1 (parse/search "f2:petter")
-          docs2 (parse/search "f2:petter AND only")
-          docs3 (parse/search "f2:petter OR lives")
-          docs4 (parse/search "f2:petter AND lot")
-          docs5 (parse/search "f1:petter")
-          docs6 (parse/search "f1:petter AND f2:petter")
-          docs7 (parse/search "f1:petter OR f2:petter")
-          docs8 (parse/search "f2:petter OR rubbish")
-          docs9 (parse/search "f1:petter OR (f2:petter AND rubbish)")
-          docs10 (parse/search "f1:petter OR (f2:petter OR rubbish)")
-          docs11 (parse/search "f1:petter OR (f2:petter OR (f2:rubbish AND f1:petter))")
+          docs1 (search "f2:petter")
+          docs2 (search "f2:petter AND only")
+          docs3 (search "f2:petter OR lives")
+          docs4 (search "f2:petter AND lot")
+          docs5 (search "f1:petter")
+          docs6 (search "f1:petter AND f2:petter")
+          docs7 (search "f1:petter OR f2:petter")
+          docs8 (search "f2:petter OR rubbish")
+          docs9 (search "f1:petter OR (f2:petter AND rubbish)")
+          docs10 (search "f1:petter OR (f2:petter OR rubbish)")
+          docs11 (search "f1:petter OR (f2:petter OR (f2:rubbish AND f1:petter))")
           ]
       (is (= #{103} docs1))
       (is (= #{103} docs2))
@@ -110,6 +113,9 @@
       )
     )
   )
+
+
+
 
 (deftest test-phrase-parser
   "Test out phrase searches in parsed queries"
@@ -129,14 +135,53 @@
           word-id2 (get @s/words "lives")
           word-id3 (get @s/words "writes")
           word-id4 (get @s/words "only")]
-      (is (= #{} (parse/search "p1:\"petter only\"")))
-      (is (= #{100} (parse/search "p1:\"petter writes\"")))
-      (is (= #{100 103} (parse/search "p1:\"petter writes\" OR p2:\"petter writes nonsense\"")))
-      (is (= #{100 101 103} (parse/search "p1:petter OR (p1:\"petter writes\" OR p2:\"petter writes nonsense\")")))
+      (is (= #{} (search "p1:\"petter only\"")))
+      (is (= #{100} (search "p1:\"petter writes\"")))
+      (is (= #{100 103} (search "p1:\"petter writes\" OR p2:\"petter writes nonsense\"")))
+      (is (= #{100 101 103} (search "p1:petter OR (p1:\"petter writes\" OR p2:\"petter writes nonsense\")")))
       )
     )
   )
 
+
+(deftest test-tfidf
+  "Test simple tf-idf algorithm"
+  (let [wc (s/create-word-counters)
+        f (s/create-field "p1" wc)
+        s1 "This is Petter writing. Petter writes a lot. Petter should drink less. Writing is fun. Writing is here. A lot is done."
+        s2 "Petter is only a true believer when it comes to C. Petter writes nonesense."
+        s3 "Petters last sentence"
+        ]
+    (s/add-string-to-field f s1 100)
+    (s/add-string-to-field f s2 101)
+    (s/add-string-to-field f s3 102)
+    (let [word-id1 (get @s/words "writing")
+          word-id2 (get @s/words "lot")
+          word-id3 (get @s/words "petter")]
+      (let [r1 (rate/tfidf 100 f word-id1)
+            r2 (rate/tfidf 100 f word-id2)
+            r3 (rate/tfidf 100 f word-id3)]
+        (is (> r1 r2 r3))
+        )
+      )
+    )
+  )
+
+
+(deftest test-score
+  "Test simple tf-idf algorithm"
+  (let [wc (s/create-word-counters)
+        f (s/create-field "f23" wc)
+        s1 "This is Petter writing. Petter writes a lot. Petter should drink less. Writing is fun. Writing is here. A lot is done."
+        s2 "Petter is only a true believer when it comes to C. Petter writes nonesense. Happy."
+        s3 "Petters last sentence"
+        ]
+    (s/add-string-to-field f s1 100)
+    (s/add-string-to-field f s2 101)
+    (s/add-string-to-field f s3 102)
+    (rate/search-and-score "score:petter AND writes AND should")
+    )
+)
 
 
 (run-tests 'lang.tests)

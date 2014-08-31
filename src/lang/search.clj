@@ -114,7 +114,7 @@
 
 
 (defn logic-query [field w1 w2 operator]
-  "Joins two queries. or1 can be a word-id or a set. Return is a transient set"
+  "Joins two queries. or1 can be a word-id or a set. Return is a set"
   (let [or1-set (if (instance? Long w1)
                   (find-all-docs-with-id field w1)
                   w1

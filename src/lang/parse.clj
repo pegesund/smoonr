@@ -47,7 +47,7 @@
 
 (defn plogic [p1 p2 operator current-field words-acc]
   (case operator
-    :and (clojure.set/intersection (search-tree p1 current-field words-acc) (search-tree p2 current-field) words-acc)
+    :and (clojure.set/intersection (search-tree p1 current-field words-acc) (search-tree p2 current-field words-acc))
     :or (clojure.set/union (search-tree p1 current-field words-acc) (search-tree p2 current-field words-acc))
     :not-ok
     )
@@ -82,7 +82,7 @@
         res (filter #(search/find-phrase 
                   (get @s/all-phrases %)
                   word-ids) and-docs)]
-    (conj! words-acc word-ids)
+    (doseq [word-id word-ids] (conj! words-acc [current-field word-id]))
     (into #{} res)
     )
 )
@@ -92,7 +92,7 @@
     (if-not field
       (throw (Exception. (str "This field is not defined: " current-field)))
       (let [word-id (get @s/words word)]
-        (conj! words-acc word-id)
+        (conj! words-acc [current-field word-id])
         (search/find-all-docs-with-id field word-id)
         )
       )

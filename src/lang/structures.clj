@@ -1,5 +1,6 @@
 (ns lang.structures
  (:import (cern.colt.list.tint IntArrayList))
+ ; (:require [lang.search :as search])
 )
 
 (set! *warn-on-reflection* true)
@@ -21,8 +22,8 @@
     [ words num phrase ]
 )
 
-(defrecord PhraseIndex 
-    [word num start pos]
+(defrecord PhraseInd
+    [ word num start pos num-of-words-in-doc ]
 )
 
 
@@ -187,10 +188,27 @@
       (add-word-to-field field word word-num docid)
       )
     )
+  (swap! (:num-docs field) inc)
   (let [index (phrase-index doc)]
     (swap! all-phrases assoc docid index)
-    )
+    ;; add debug info
+    ; (comment
+      (let [wordlist (string-to-map doc)
+            word-ids (map #(get @words %) (keys wordlist))
+            ]
+        (println "----- Doc-id" docid  " Wordlist: " wordlist " word-ids: " word-ids "keys: " (keys wordlist)  " doc: " doc " index: " index )
+        ; (doseq [word-id word-ids]
+          ; (println "word-id: " word " word-id: " (get @words word)  " index: " index)
+          ; (when-not (search/find-phrase index (list word-id))
+          ;    (println "-- strange things, with word: " word-id " not found in: " index)
+         ;     )
+        ;  nil
+       ;   )
+        )
+   ;   )
+
   )
+)
 
 
     
@@ -222,17 +240,19 @@
 )
  
 
-(defn create-phrase-index []
+(defn create-phrase-index [num-of-words-in-doc]
   "word - an colt array of word id
    num  - an colt array of number of ocurs of this word
    start - start position of num words
    pos - positions, referenced by start and nums
+   num-of-words-in-doc
    "
-  (PhraseIndex.
+  (PhraseInd.
         (new cern.colt.list.tint.IntArrayList)
         (new cern.colt.list.tint.IntArrayList)
         (new cern.colt.list.tint.IntArrayList)
         (new cern.colt.list.tint.IntArrayList)
+        num-of-words-in-doc
         )
   )
 
@@ -243,7 +263,7 @@
   (let [word_list (string-to-words (clojure.string/lower-case str))
         word_list_id (map #(get @words %) word_list)
         sorted_wordid (sort (distinct word_list_id))
-        phrase_index (create-phrase-index)
+        phrase_index (create-phrase-index (count word_list_id))
         ^IntArrayList word_a (:word phrase_index)
         ^IntArrayList num_a (:num phrase_index)
         ^IntArrayList pos_a (:pos phrase_index)
@@ -262,6 +282,11 @@
   )
 
  
- 
+(defn reset-all []
+  (reset! words {})
+  (reset! all-phrases {})
+  (reset! all-fields {})
+  (reset! word-id-creator 0)
+)
                      
                      
