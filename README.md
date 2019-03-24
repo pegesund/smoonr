@@ -1,14 +1,14 @@
 # lang
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure search engine, providing much as the same functionality as basic lucene.
+
+Also a project for learning clojure.
 
 ## Usage
 
-FIXME
+Se the tests where I benchmark wikipedia searches in lucene against smoonr. 
 
 ## License
-
-Copyright © 2014 FIXME
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
