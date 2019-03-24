@@ -1,4 +1,4 @@
-# lang
+# Smoonr
 
 A Clojure search engine, providing much as the same functionality as basic lucene.
 
